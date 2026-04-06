@@ -27,6 +27,9 @@ router.get('/', async (req, res) => {
     const sourceId = req.params.sourceId || null;
     const page = parseInt(pg, 10) || 1;
 
+    // 记录所有请求日志
+    logger.info(`[AppleCMS] 请求: ac=${ac}, t=${t}, pg=${pg}, wd=${wd ? '***' : null}, ids=${ids}`);
+
     // 获取要使用的引擎列表
     const engines = sourceId
       ? (() => {
