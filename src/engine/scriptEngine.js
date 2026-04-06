@@ -16,7 +16,7 @@ const https = require('https');
 const http = require('http');
 const { logger } = require('../logger');
 const createOmniBoxSDK = require('./omniboxSdkMock');
-const { createRunner: createSpiderRunner } = require('./spiderRunnerMock');
+const { createSpiderRunner } = require('./spiderRunnerMock');
 
 // 给脚本内部用的 fake require
 function buildFakeRequire(scriptName) {
