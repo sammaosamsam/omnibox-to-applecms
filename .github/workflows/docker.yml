@@ -119,8 +119,10 @@ jobs:
       fail-fast: false
       matrix:
         platform:
+          # 暂时只构建 amd64（GitHub Actions ARM64 runner 内存有限，可能导致 npm install 失败）
           - linux/amd64
-          - linux/arm64
+          # 如需 ARM64 支持，可取消下面的注释（需要配置更大内存的 self-hosted runner）
+          # - linux/arm64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -238,7 +240,7 @@ jobs:
             "version": "$VERSION",
             "image": "$IMAGE",
             "tag": "latest",
-            "arch": ["amd64", "arm64"],
+            "arch": ["amd64"],
             "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
             "build_sha": "${{ github.sha }}",
             "deployment": {
@@ -343,7 +345,7 @@ jobs:
           echo "|------|-------|"
           echo "| Version | ${{ needs.info.outputs.version }} |"
           echo "| Event | ${{ github.event_name }} |"
-          echo "| Architectures | amd64, arm64 |"
+          echo "| Architectures | amd64 |"
           echo ""
           echo "### Images"
           echo "- \`${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest\`"
