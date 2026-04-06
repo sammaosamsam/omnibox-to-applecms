@@ -16,11 +16,13 @@ const https = require('https');
 const http = require('http');
 const { logger } = require('../logger');
 const createOmniBoxSDK = require('./omniboxSdkMock');
+const { createRunner: createSpiderRunner } = require('./spiderRunnerMock');
 
 // 给脚本内部用的 fake require
 function buildFakeRequire(scriptName) {
   // 每个脚本实例有自己的 SDK 实例
   const sdkInstances = new Map();
+  const runnerInstances = new Map();
 
   return function fakeRequire(mod) {
     if (mod === 'axios') return axios;
@@ -34,6 +36,13 @@ function buildFakeRequire(scriptName) {
         sdkInstances.set(scriptName, createOmniBoxSDK());
       }
       return sdkInstances.get(scriptName);
+    }
+    if (mod === 'spider_runner') {
+      // 返回一个新的 SpiderRunner 实例（每个脚本独立）
+      if (!runnerInstances.has(scriptName)) {
+        runnerInstances.set(scriptName, createSpiderRunner());
+      }
+      return runnerInstances.get(scriptName);
     }
     throw new Error(`模块 ${mod} 不在白名单内`);
   };
