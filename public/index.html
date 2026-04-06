@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniBox → AppleCMS 管理面板</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3347;
+      --accent: #6c8aff;
+      --accent2: #4ade80;
+      --warn: #f59e0b;
+      --error: #ef4444;
+      --text: #e2e8f0;
+      --text2: #94a3b8;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'SF Pro Text', 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+    }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    header .logo { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    header .logo span { color: var(--accent); }
+    header .badge {
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+    .status-bar {
+      display: flex;
+      gap: 20px;
+      padding: 12px 24px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .stat { display: flex; align-items: center; gap: 6px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot.green { background: var(--accent2); }
+    .dot.red { background: var(--error); }
+    .dot.yellow { background: var(--warn); }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: var(--accent); }
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .source-name { font-size: 15px; font-weight: 600; }
+    .source-url {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 4px;
+      word-break: break-all;
+    }
+    .status-badge {
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .status-ok { background: rgba(74,222,128,0.15); color: var(--accent2); }
+    .status-error { background: rgba(239,68,68,0.15); color: var(--error); }
+    .status-pending { background: rgba(245,158,11,0.15); color: var(--warn); }
+    .card-meta {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .card-actions { display: flex; gap: 8px; margin-top: 14px; }
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn:hover { background: var(--border); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.primary:hover { opacity: 0.85; }
+    .btn.danger { color: var(--error); border-color: var(--error); }
+    .btn.danger:hover { background: rgba(239,68,68,0.1); }
+    .btn.sm { padding: 4px 10px; font-size: 12px; }
+    .api-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-family: monospace;
+      color: var(--accent);
+      margin-top: 10px;
+      word-break: break-all;
+      cursor: pointer;
+    }
+    .api-box:hover { border-color: var(--accent); }
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(4px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 520px;
+      max-width: 95vw;
+    }
+    .modal h2 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 13px; color: var(--text2); margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 12px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    .form-row { display: flex; gap: 12px; }
+    .form-row .form-group { flex: 1; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+    .toggle {
+      position: relative; display: inline-block;
+      width: 40px; height: 22px;
+    }
+    .toggle input { display: none; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text2);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    .toast {
+      position: fixed;
+      bottom: 24px; right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      z-index: 999;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .toast.success { border-color: var(--accent2); }
+    .toast.error { border-color: var(--error); }
+    .copy-hint { font-size: 11px; color: var(--text2); margin-top: 4px; }
+    .cron-hint { font-size: 11px; color: var(--text2); margin-top: 4px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">OmniBox <span>→</span> AppleCMS</div>
+  <div class="badge">V10</div>
+  <div style="margin-left:auto;font-size:13px;color:var(--text2)" id="uptime">...</div>
+</header>
+
+<div class="status-bar" id="statusBar">
+  <div class="stat"><div class="dot green"></div><span id="statOk">0</span> 正常</div>
+  <div class="stat"><div class="dot red"></div><span id="statErr">0</span> 错误</div>
+  <div class="stat"><div class="dot yellow"></div><span id="statPend">0</span> 等待</div>
+  <div class="stat" style="margin-left:auto">
+    <span style="color:var(--text2)">聚合接口：</span>
+    <span class="api-box" onclick="copyText(window.location.origin+'/api/vod')" style="display:inline;margin:0;padding:2px 8px">
+      <span id="globalApiUrl"></span>
+    </span>
+  </div>
+</div>
+
+<main>
+  <div class="section-title">
+    <span>📡 已配置的 OmniBox 源</span>
+    <button class="btn primary" onclick="openModal()">+ 添加新源</button>
+  </div>
+
+  <div id="sourceList"></div>
+</main>
+
+<!-- 添加/编辑源的 Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2 id="modalTitle">添加 OmniBox 源</h2>
+    <div class="form-group">
+      <label>源名称 <span style="color:#ef4444">*</span></label>
+      <input type="text" id="fieldName" placeholder="例如：瓜子APP">
+    </div>
+    <div class="form-group">
+      <label>脚本 URL <span style="color:#ef4444">*</span></label>
+      <input type="text" id="fieldUrl" placeholder="GitHub 链接 或 raw URL 均可">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>刷新周期（Cron）</label>
+        <input type="text" id="fieldCron" placeholder="0 */2 * * *" value="0 */2 * * *">
+        <div class="cron-hint">每2小时 = 0 */2 * * *　　每天凌晨 = 0 2 * * *</div>
+      </div>
+      <div class="form-group" style="max-width:100px">
+        <label>启用</label>
+        <label class="toggle" style="margin-top:6px">
+          <input type="checkbox" id="fieldEnabled" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="saveSource()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  let editingId = null;
+  const BASE = window.location.origin;
+
+  document.getElementById('globalApiUrl').textContent = BASE + '/api/vod';
+
+  // ── 初始化 ────────────────────────────────────────────────
+  async function init() {
+    await loadStatus();
+    await loadSources();
+    setInterval(loadStatus, 10000);
+  }
+
+  async function loadStatus() {
+    const r = await fetch('/admin/status').then(r => r.json());
+    if (r.code === 0) {
+      const d = r.data;
+      document.getElementById('statOk').textContent = d.ok;
+      document.getElementById('statErr').textContent = d.error;
+      document.getElementById('statPend').textContent = d.pending;
+      document.getElementById('uptime').textContent = '运行时间: ' + formatUptime(d.uptime);
+    }
+  }
+
+  async function loadSources() {
+    const r = await fetch('/admin/sources').then(r => r.json());
+    const list = r.data || [];
+    renderSources(list);
+  }
+
+  function renderSources(sources) {
+    const el = document.getElementById('sourceList');
+    if (!sources.length) {
+      el.innerHTML = `<div class="empty-state">
+        <div class="icon">📭</div>
+        <div style="font-size:16px;font-weight:600;margin-bottom:8px">还没有添加任何源</div>
+        <div>点击右上角「添加新源」开始</div>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = sources.map(s => {
+      const statusClass = { ok: 'status-ok', error: 'status-error', pending: 'status-pending' }[s.status] || 'status-pending';
+      const statusText = { ok: '✅ 正常', error: '❌ 错误', pending: '⏳ 等待' }[s.status] || '等待';
+      const apiUrl = `${BASE}/source/${s.id}/api/vod`;
+      const lastFetch = s.lastFetch ? new Date(s.lastFetch).toLocaleString('zh-CN') : '从未';
+
+      return `
+      <div class="card" id="card-${s.id}">
+        <div class="card-header">
+          <div>
+            <div class="source-name">${escHtml(s.name)}</div>
+            <div class="source-url">${escHtml(s.url)}</div>
+          </div>
+          <div class="status-badge ${statusClass}">${statusText}</div>
+        </div>
+        ${s.lastError ? `<div style="font-size:12px;color:var(--error);margin-top:8px;padding:6px 10px;background:rgba(239,68,68,0.08);border-radius:6px">${escHtml(s.lastError)}</div>` : ''}
+        <div class="card-meta">
+          <span>Cron: <code>${s.cronExpr || '0 */2 * * *'}</code></span>
+          <span>上次刷新: ${lastFetch}</span>
+          <span>${s.enabled ? '✅ 已启用' : '⏸ 已禁用'}</span>
+        </div>
+        <div class="api-box" onclick="copyText('${apiUrl}')" title="点击复制">
+          独立接口: ${apiUrl}
+        </div>
+        <div class="copy-hint">↑ 将此地址填入 AppleCMS 采集站点即可</div>
+        <div class="card-actions">
+          <button class="btn sm" onclick="refreshSource('${s.id}')">🔄 立即刷新</button>
+          <button class="btn sm" onclick="editSource(${JSON.stringify(s).replace(/"/g, '&quot;')})">✏️ 编辑</button>
+          <button class="btn sm" onclick="toggleEnable('${s.id}', ${!s.enabled})">${s.enabled ? '⏸ 禁用' : '▶ 启用'}</button>
+          <button class="btn sm danger" onclick="deleteSource('${s.id}', '${escHtml(s.name)}')">🗑 删除</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ── 操作 ─────────────────────────────────────────────────
+  async function refreshSource(id) {
+    showToast('正在刷新脚本...', '');
+    const r = await fetch(`/admin/sources/${id}/refresh`, { method: 'POST' }).then(r => r.json());
+    if (r.code === 0) {
+      showToast('刷新成功', 'success');
+      loadSources();
+    } else {
+      showToast('刷新失败: ' + r.msg, 'error');
+    }
+  }
+
+  async function deleteSource(id, name) {
+    if (!confirm(`确定删除「${name}」吗？`)) return;
+    await fetch(`/admin/sources/${id}`, { method: 'DELETE' });
+    showToast('已删除', 'success');
+    loadSources();
+    loadStatus();
+  }
+
+  async function toggleEnable(id, enabled) {
+    await fetch(`/admin/sources/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled }),
+    });
+    loadSources();
+  }
+
+  // ── Modal ─────────────────────────────────────────────────
+  function openModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = '添加 OmniBox 源';
+    document.getElementById('fieldName').value = '';
+    document.getElementById('fieldUrl').value = '';
+    document.getElementById('fieldCron').value = '0 */2 * * *';
+    document.getElementById('fieldEnabled').checked = true;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function editSource(s) {
+    editingId = s.id;
+    document.getElementById('modalTitle').textContent = '编辑 OmniBox 源';
+    document.getElementById('fieldName').value = s.name;
+    document.getElementById('fieldUrl').value = s.url;
+    document.getElementById('fieldCron').value = s.cronExpr || '0 */2 * * *';
+    document.getElementById('fieldEnabled').checked = s.enabled;
+    document.getElementById('modalOverlay').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('open');
+  }
+
+  async function saveSource() {
+    const name = document.getElementById('fieldName').value.trim();
+    const url = document.getElementById('fieldUrl').value.trim();
+    const cronExpr = document.getElementById('fieldCron').value.trim();
+    const enabled = document.getElementById('fieldEnabled').checked;
+
+    if (!name || !url) {
+      showToast('名称和 URL 不能为空', 'error');
+      return;
+    }
+
+    const body = { name, url, cronExpr, enabled };
+
+    let r;
+    if (editingId) {
+      r = await fetch(`/admin/sources/${editingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(r => r.json());
+    } else {
+      r = await fetch('/admin/sources', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      }).then(r => r.json());
+    }
+
+    if (r.code === 0) {
+      showToast(editingId ? '更新成功' : '添加成功，正在拉取脚本...', 'success');
+      closeModal();
+      loadSources();
+      loadStatus();
+    } else {
+      showToast('操作失败: ' + r.msg, 'error');
+    }
+  }
+
+  // 点击遮罩关闭
+  document.getElementById('modalOverlay').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+  });
+
+  // ── 工具函数 ──────────────────────────────────────────────
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板', 'success'));
+  }
+
+  function showToast(msg, type) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast show ' + (type || '');
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function escHtml(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function formatUptime(secs) {
+    const h = Math.floor(secs / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    return `${h}h ${m}m`;
+  }
+
+  init();
+</script>
+</body>
+</html>

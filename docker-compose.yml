@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  omnibox-proxy:
+    image: omnibox-to-applecms:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: omnibox-applecms
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      # 持久化数据（源配置 + 日志）
+      - omnibox_data:/app/data
+    environment:
+      PORT: 3000
+      LOG_LEVEL: info
+      LOG_FILE: /app/data/app.log
+      DATA_FILE: /app/data/sources.json
+      # 管理界面 API Key（留空则不验证，建议生产环境设置）
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      TZ: Asia/Shanghai
+    networks:
+      - omnibox_net
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+volumes:
+  omnibox_data:
+    driver: local
+
+networks:
+  omnibox_net:
+    driver: bridge
