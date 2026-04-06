@@ -34,6 +34,9 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/omnibox-to-applecms
   NODE_VERSION: '20-alpine'
   DOCKER_BUILDKIT: 1
+  # Docker Hub 配置
+  DOCKERHUB_REGISTRY: docker.io
+  DOCKERHUB_REPO: sammaosamsam/omnibox-to-applecms
 
 jobs:
   # ─────────────────────────────────────────────────────────────
@@ -148,7 +151,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
+      # Docker Hub 登录（需要添加 DOCKERHUB_USERNAME 和 DOCKERHUB_TOKEN 到 Secrets）
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: docker.io
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract metadata (GHCR)
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -160,7 +171,19 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=raw,value=${{ needs.info.outputs.version }}
 
-      - name: Build and push
+      - name: Extract metadata (Docker Hub)
+        id: meta-dockerhub
+        uses: docker/metadata-action@v5
+        with:
+          images: docker.io/${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=sha,prefix=,suffix=,format=short
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=${{ needs.info.outputs.version }}
+
+      - name: Build and push (GHCR)
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -168,6 +191,17 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Build and push (Docker Hub)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-dockerhub.outputs.tags }}
+          labels: ${{ steps.meta-dockerhub.outputs.labels }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
 
