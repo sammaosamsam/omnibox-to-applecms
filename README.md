@@ -96,8 +96,8 @@ node src/index.js
 
 | 类型 | URL |
 |------|-----|
-| 聚合所有源 | `http://your-host:3000/api/vod` |
-| 单个源 | `http://your-host:3000/source/{sourceId}/api/vod` |
+| 聚合所有源 | `http://your-host:3033/api/vod` |
+| 单个源 | `http://your-host:3033/source/{sourceId}/api/vod` |
 
 **在 AppleCMS 后台** → 采集管理 → 新增采集站点 → 填入接口 URL 即可。
 
@@ -143,7 +143,7 @@ curl -X POST http://localhost:3033/admin/sources \
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `PORT` | `3000` | 服务端口 |
+| `PORT` | `3033` | 服务端口 |
 | `ADMIN_API_KEY` | 空（无需认证）| 管理 API 密钥 |
 | `LOG_LEVEL` | `info` | 日志级别 |
 | `DATA_FILE` | `/app/data/sources.json` | 数据存储路径 |
