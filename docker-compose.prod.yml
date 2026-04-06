@@ -73,9 +73,7 @@ services:
     # ── 网络配置 ────────────────────────────────────
     networks:
       - omnibox_net
-      # 连接 OmniBox 容器的网络，以便调用 spider API
-      omnibox-network:
-        external: true
+      - omnibox-network
 
     # ── 资源限制（可选）────────────────────────────
     deploy:
@@ -103,3 +101,5 @@ services:
 networks:
   omnibox_net:
     driver: bridge
+  omnibox-network:
+    external: true
