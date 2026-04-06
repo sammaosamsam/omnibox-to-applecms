@@ -11,16 +11,20 @@
 
 // 创建一个兼容的 runner 实例
 function createSpiderRunner() {
-  // 在我们的环境中，不需要真正实现 stdin/stdout 通信
-  // ScriptEngine 直接调用 handlers 的方法
-  return function run(handlers) {
-    console.log('[spider_runner] Mock runner initialized');
-    // 返回 runners 对象，供脚本使用
-    return {
-      start: () => {},
-      stop: () => {}
-    };
+  // 返回一个 runner 对象，脚本会调用 .run(handlers)
+  const runner = {
+    run: function(handlers) {
+      console.log('[spider_runner] Mock runner initialized with handlers:', Object.keys(handlers));
+      return this;
+    },
+    start: function() {
+      console.log('[spider_runner] Mock runner started');
+    },
+    stop: function() {
+      console.log('[spider_runner] Mock runner stopped');
+    }
   };
+  return runner;
 }
 
 module.exports = { createSpiderRunner };
