@@ -90,6 +90,11 @@ function omniItemToApple(item, sourceId) {
   };
 }
 
+// 别名：与路由调用保持一致
+function omniItemToAppleFromModule(sourceId, item) {
+  return omniItemToApple(item, sourceId);
+}
+
 // ─── 单条视频：详情格式（含播放源）────────────────────────────
 function omniDetailToApple(item, sourceId) {
   const base = omniItemToApple(item, sourceId);
@@ -161,6 +166,9 @@ module.exports = {
   homeToAppleCms,
   listToAppleCms,
   detailToAppleCms,
+  omniItemToApple,
+  omniItemToAppleFromModule,
+  omniDetailToApple,
   encodeVodId,
   decodeVodId,
   encodeTypeId,
