@@ -330,6 +330,19 @@ function createOmniBoxSDK() {
     }
   }
 
+  // ─── 日志方法 ───────────────────────────────────────────────
+  function log(...args) {
+    console.log('[OmniBox]', ...args);
+  }
+
+  function warn(...args) {
+    console.warn('[OmniBox WARN]', ...args);
+  }
+
+  function error(...args) {
+    console.error('[OmniBox ERROR]', ...args);
+  }
+
   // ─── 返回 SDK 对象 ───────────────────────────────────────────
   return {
     req,
@@ -339,6 +352,9 @@ function createOmniBoxSDK() {
     setReferer,
     setRequestContext,
     getRequestContext,
+    log,
+    warn,
+    error,
     // 兼容别名
     crypto: {
       encrypt: utils.aesEncrypt,
