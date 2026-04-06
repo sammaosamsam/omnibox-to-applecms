@@ -1,0 +1,60 @@
+# ────────────────────────────────────────────────
+# OmniBox to AppleCMS - 自动更新部署配置
+# ────────────────────────────────────────────────
+# 包含 Watchtower 自动监控并更新镜像
+# 使用方式：docker compose -f docker-compose.autoupdate.yml up -d
+# ────────────────────────────────────────────────
+
+services:
+  # ── 主应用 ──────────────────────────────────────
+  omnibox-proxy:
+    image: ghcr.io/sammaosamsam/omnibox-to-applecms:latest
+    container_name: omnibox-applecms
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3033}:3033"
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/data
+    environment:
+      PORT: 3033
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      LOG_FILE: /app/data/app.log
+      DATA_FILE: /app/data/sources.json
+      ADMIN_API_KEY: "${ADMIN_API_KEY}"
+      TZ: Asia/Shanghai
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3033/admin/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - omnibox_net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    labels:
+      - "com.omnibox.description=OmniBox爬虫脚本→AppleCMS转换代理"
+
+  # ── Watchtower 自动更新 ─────────────────────────
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: always
+    # 仅监控 omnibox-applecms 容器
+    command: --interval 3600 --cleanup --include-restarting omibox-applecms
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - omnibox_net
+    environment:
+      # 禁用 Watchtower API（安全）
+      WATCHTOWER_NO_AUTH: "true"
+      TZ: Asia/Shanghai
+
+networks:
+  omnibox_net:
+    driver: bridge

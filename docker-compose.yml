@@ -14,7 +14,7 @@ services:
       # 持久化数据（源配置 + 日志）
       - omnibox_data:/app/data
     environment:
-      PORT: 3000
+      PORT: 3033
       LOG_LEVEL: info
       LOG_FILE: /app/data/app.log
       DATA_FILE: /app/data/sources.json

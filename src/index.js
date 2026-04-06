@@ -14,7 +14,7 @@ const appleCmsRoutes = require('./routes/applecms');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3033;
 
 // 中间件
 app.use(cors());
@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 // ============================================================
 // AppleCMS V10 标准接口路由
-// 访问方式：http://host:3000/api/vod?ac=list&t=1
+// 访问方式：http://host:3033/api/vod?ac=list&t=1
 //           http://host:3000/api/vod?ac=detail&ids=xxx
 // 每个 Source 有独立路径：/source/:sourceId/api/vod
 // ============================================================

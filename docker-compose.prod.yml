@@ -1,0 +1,99 @@
+# ────────────────────────────────────────────────
+# OmniBox to AppleCMS - 生产环境部署配置
+# ────────────────────────────────────────────────
+# 使用方式：
+#   1. 从 GitHub Container Registry 拉取镜像（推荐）
+#      docker compose -f docker-compose.prod.yml up -d
+#
+#   2. 本地构建
+#      docker compose -f docker-compose.prod.yml build
+#      docker compose -f docker-compose.prod.yml up -d
+#
+# 环境变量文件：
+#   复制 .env.example 为 .env 并填写配置
+# ────────────────────────────────────────────────
+
+services:
+  omnibox-proxy:
+    # ── 镜像来源（选择一种）──────────────────────────
+    # 方式 A: 从 GitHub Container Registry 拉取（推荐）
+    image: ghcr.io/sammaosamsam/omnibox-to-applecms:latest
+
+    # 方式 B: 本地构建（取消下面的注释，注释掉方式 A）
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
+    #   platforms:
+    #     - linux/amd64
+
+    container_name: omnibox-applecms
+    restart: unless-stopped
+
+    # ── 端口映射 ────────────────────────────────────
+    ports:
+      - "${PORT:-3033}:3033"
+
+    # ── 持久化存储 ──────────────────────────────────
+    volumes:
+      # 配置文件（sources.json 等）
+      - ./data:/app/data
+      # 日志文件
+      - ./logs:/app/data
+
+    # ── 环境变量 ────────────────────────────────────
+    environment:
+      # 服务端口（容器内）
+      PORT: 3000
+
+      # 日志配置
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      LOG_FILE: /app/data/app.log
+
+      # 数据文件路径
+      DATA_FILE: /app/data/sources.json
+
+      # ── 安全配置 ────────────────────────────────
+      # ⚠️ 生产环境必须设置！管理界面 API 密钥
+      ADMIN_API_KEY: "${ADMIN_API_KEY}"
+
+      # 时区
+      TZ: Asia/Shanghai
+
+    # ── 健康检查 ────────────────────────────────────
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/admin/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    # ── 网络配置 ────────────────────────────────────
+    networks:
+      - omnibox_net
+
+    # ── 资源限制（可选）────────────────────────────
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # ── 日志配置 ────────────────────────────────────
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # ── 标签 ───────────────────────────────────────
+    labels:
+      - "com.omnibox.description=OmniBox爬虫脚本→AppleCMS转换代理"
+      - "com.omnibox.version=${IMAGE_TAG:-latest}"
+
+# ── 网络 ──────────────────────────────────────────
+networks:
+  omnibox_net:
+    driver: bridge

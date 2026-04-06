@@ -37,9 +37,9 @@ RUN mkdir -p /app/data && chown -R appuser:appgroup /app
 
 USER appuser
 
-EXPOSE 3000
+EXPOSE 3033
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
-  CMD wget -qO- http://localhost:3000/admin/status || exit 1
+  CMD wget -qO- http://localhost:3033/admin/status || exit 1
 
 CMD ["node", "src/index.js"]

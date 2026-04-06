@@ -26,20 +26,46 @@
 git clone <this-repo>
 cd omnibox-to-applecms
 
-# 2. 构建并启动
-docker compose up -d --build
+# 2. 配置环境变量
+cp .env.example .env
+nano .env  # 编辑 ADMIN_API_KEY（必填）
 
-# 3. 访问管理界面
+# 3. 启动服务
+docker compose -f docker-compose.prod.yml up -d
+
+# 4. 访问管理界面
 open http://localhost:3000
 ```
 
-### 方式二：直接 Docker 运行
+### 方式二：拉取预构建镜像（推荐）
+
+```bash
+# 1. 直接使用 GitHub Container Registry
+docker compose -f docker-compose.prod.yml up -d
+
+# 2. 自动更新版（Watchtower 每小时检查更新）
+docker compose -f docker-compose.autoupdate.yml up -d
+```
+
+### 方式三：使用部署脚本
+
+```bash
+chmod +x deploy.sh
+./deploy.sh              # 交互式菜单
+./deploy.sh prod         # 生产环境
+./deploy.sh autoupdate   # 自动更新版
+./deploy.sh update       # 仅更新镜像
+./deploy.sh logs         # 查看日志
+./deploy.sh restart       # 重启服务
+```
+
+### 方式四：直接 Docker 运行
 
 ```bash
 docker run -d \
   --name omnibox-applecms \
   --restart unless-stopped \
-  -p 3000:3000 \
+  -p 3033:3033 \
   -v omnibox_data:/app/data \
   omnibox-to-applecms:latest
 ```
@@ -57,7 +83,7 @@ node src/index.js
 
 ### 第一步：添加 OmniBox 源
 
-打开 `http://localhost:3000`，点击「添加新源」，填入：
+打开 `http://localhost:3033`，点击「添加新源」，填入：
 
 - **名称**：如 `瓜子APP`
 - **URL**：GitHub 链接（自动转换为 raw URL）或直接 raw URL  
@@ -101,7 +127,7 @@ node src/index.js
 ### 添加源示例
 
 ```bash
-curl -X POST http://localhost:3000/admin/sources \
+curl -X POST http://localhost:3033/admin/sources \
   -H 'Content-Type: application/json' \
   -d '{
     "name": "瓜子APP",
