@@ -52,8 +52,8 @@ services:
       # 数据文件路径
       DATA_FILE: /app/data/sources.json
 
-      # OmniBox API 地址（连接到 omnibox 容器）
-      OMNIBOX_API_URL: "http://omnibox:7023/api/spider/omnibox"
+      # OmniBox API 地址（公网访问）
+      OMNIBOX_API_URL: "http://8.154.194.18:7023/api/spider/omnibox"
 
       # ── 安全配置 ────────────────────────────────
       # ⚠️ 生产环境必须设置！管理界面 API 密钥
