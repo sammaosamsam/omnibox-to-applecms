@@ -9,12 +9,18 @@
  * 所以这里只需要一个空实现，让脚本能够正常 require
  */
 
-// spider_runner.run() 接收脚本导出对象，然后在 stdin 有数据时调用对应方法
-// 我们的实现不需要这个行为，因为 ScriptEngine 已经处理了方法调用
-function run(handlers) {
+// 创建一个兼容的 runner 实例
+function createSpiderRunner() {
   // 在我们的环境中，不需要真正实现 stdin/stdout 通信
   // ScriptEngine 直接调用 handlers 的方法
-  console.log('[spider_runner] Mock runner initialized');
+  return function run(handlers) {
+    console.log('[spider_runner] Mock runner initialized');
+    // 返回 runners 对象，供脚本使用
+    return {
+      start: () => {},
+      stop: () => {}
+    };
+  };
 }
 
-module.exports = { run };
+module.exports = { createSpiderRunner };
