@@ -90,7 +90,36 @@ class ScriptEngine {
     for (const id of idList) {
       try {
         const r = await this._call('detail', [{ videoId: id }]);
-        if (r && r.list) results.push(...r.list);
+        if (r && r.list) {
+          for (const item of r.list) {
+            // 如果没有播放源，尝试调用 play 方法获取
+            if (!item.vod_play_sources && !item.vod_play_url) {
+              try {
+                const playResult = await this._call('play', [{ videoId: id, index: 0 }]);
+                if (playResult) {
+                  // OmniBox play 可能返回的格式：直接是播放源，或 { list: [...] }
+                  if (playResult.vod_play_sources) {
+                    item.vod_play_sources = playResult.vod_play_sources;
+                  } else if (playResult.vod_play_url) {
+                    item.vod_play_url = playResult.vod_play_url;
+                    item.vod_play_from = playResult.vod_play_from || '默认线路';
+                  } else if (playResult.list && playResult.list.length > 0) {
+                    // 可能是嵌套的 list
+                    const first = playResult.list[0];
+                    if (first.vod_play_sources) item.vod_play_sources = first.vod_play_sources;
+                    else if (first.vod_play_url) {
+                      item.vod_play_url = first.vod_play_url;
+                      item.vod_play_from = first.vod_play_from || '默认线路';
+                    }
+                  }
+                }
+              } catch (playErr) {
+                logger.warn(`[${this.name}] play(${id}) 失败: ${playErr.message}`);
+              }
+            }
+            results.push(item);
+          }
+        }
       } catch (e) {
         logger.warn(`[${this.name}] detail(${id}) 失败: ${e.message}`);
       }
