@@ -204,67 +204,10 @@ jobs:
           docker buildx imagetools inspect ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
   # ─────────────────────────────────────────────────────────────
-  # Job 5: 更新数据配置（仅 main 分支）
+  # 注意：已移除 update-config job，因为它需要推送权限
+  # 版本信息可通过 GitHub API 获取：gh api repos/{owner}/{repo}/releases/latest
+  # 如需自动更新 data/deployment.json，建议在本地运行或使用 PAT
   # ─────────────────────────────────────────────────────────────
-  update-config:
-    name: Update Data Config
-    needs: [info, manifest]
-    runs-on: ubuntu-latest
-    if: |
-      github.event_name != 'pull_request' &&
-      needs.info.outputs.is_main == 'true'
-    outputs:
-      updated: ${{ steps.update.outputs.UPDATED }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-          fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Update data template
-        id: update
-        run: |
-          VERSION=${{ needs.info.outputs.version }}
-          IMAGE=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-
-          mkdir -p data
-
-          cat > data/deployment.json << EOF
-          {
-            "version": "$VERSION",
-            "image": "$IMAGE",
-            "tag": "latest",
-            "arch": ["amd64"],
-            "updated_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-            "build_sha": "${{ github.sha }}",
-            "deployment": {
-              "port": 3000,
-              "data_volume": "omnibox_data",
-              "health_check": "/admin/status",
-              "restart_policy": "unless-stopped"
-            },
-            "environment": {
-              "PORT": 3000,
-              "LOG_LEVEL": "info",
-              "LOG_FILE": "/app/data/app.log",
-              "DATA_FILE": "/app/data/sources.json"
-            }
-          }
-          EOF
-
-          echo "UPDATED=true" >> $GITHUB_OUTPUT
-
-      - name: Commit and push update
-        run: |
-          git add data/
-          git commit -m "chore: update deployment config for ${{ needs.info.outputs.version }}" || exit 0
-          git push
 
   # ─────────────────────────────────────────────────────────────
   # Job 6: 发布（仅 tag 触发）
