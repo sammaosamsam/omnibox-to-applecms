@@ -34,7 +34,8 @@ env:
   IMAGE_NAME: ${{ github.repository_owner }}/omnibox-to-applecms
   NODE_VERSION: '20-alpine'
   DOCKER_BUILDKIT: 1
-  # Docker Hub 配置
+  # Docker Hub 配置（启用时设为 true）
+  DOCKERHUB_ENABLED: ${{ vars.DOCKERHUB_ENABLED }}
   DOCKERHUB_REGISTRY: docker.io
   DOCKERHUB_REPO: sanmaosam/omnibox-to-applecms
 
