@@ -7,11 +7,15 @@
  * - req: HTTP 请求封装（支持加密/解密）
  * - utils: 工具函数（加密、编码等）
  * - setHeaders/getHeaders: 请求头管理
+ * - home/category/detail/search/play: 调用 OmniBox 后端 API
  */
 'use strict';
 
 const crypto = require('crypto');
 const axios = require('axios');
+
+// ─── OmniBox API 配置 ──────────────────────────────────────────
+const OMNIBOX_API_URL = process.env.OMNIBOX_API_URL || 'http://omnibox:7023/api/spider/omnibox';
 
 // ─── 内置请求头 ────────────────────────────────────────────────
 const DEFAULT_HEADERS = {
@@ -279,6 +283,53 @@ function createOmniBoxSDK() {
     _referer = url;
   }
 
+  // ─── 请求上下文（由 spider_runner 设置）─────────────────────
+  let _requestContext = null;
+
+  function setRequestContext(ctx) {
+    _requestContext = ctx || null;
+  }
+
+  function getRequestContext() {
+    return _requestContext;
+  }
+
+  // ─── 调用 OmniBox 后端 API ──────────────────────────────────
+  async function callSpiderAPI(method, params = {}, context = {}) {
+    const requestBody = {
+      method,
+      params,
+      context: {
+        ..._requestContext,
+        ...context,
+      },
+    };
+
+    try {
+      const response = await axios.post(OMNIBOX_API_URL, requestBody, {
+        headers: {
+          'Content-Type': 'application/json',
+          ..._headers,
+        },
+        timeout: 30000,
+      });
+
+      if (response.data && response.data.success !== false) {
+        return response.data.data || response.data;
+      } else {
+        throw new Error(response.data?.error || 'API 调用失败');
+      }
+    } catch (error) {
+      if (error.response) {
+        throw new Error(`OmniBox API 错误 [${error.response.status}]: ${error.message}`);
+      } else if (error.request) {
+        throw new Error(`无法连接 OmniBox API (${OMNIBOX_API_URL}): ${error.message}`);
+      } else {
+        throw new Error(`API 调用错误: ${error.message}`);
+      }
+    }
+  }
+
   // ─── 返回 SDK 对象 ───────────────────────────────────────────
   return {
     req,
@@ -286,6 +337,8 @@ function createOmniBoxSDK() {
     setHeaders,
     getHeaders,
     setReferer,
+    setRequestContext,
+    getRequestContext,
     // 兼容别名
     crypto: {
       encrypt: utils.aesEncrypt,
@@ -294,6 +347,12 @@ function createOmniBoxSDK() {
       sha1: utils.sha1,
       sha256: utils.sha256,
     },
+    // OmniBox API 方法
+    home: (params) => callSpiderAPI('home', params),
+    category: (params) => callSpiderAPI('category', params),
+    detail: (params) => callSpiderAPI('detail', params),
+    search: (params) => callSpiderAPI('search', params),
+    play: (params) => callSpiderAPI('play', params),
   };
 }
 

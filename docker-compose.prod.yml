@@ -52,6 +52,9 @@ services:
       # 数据文件路径
       DATA_FILE: /app/data/sources.json
 
+      # OmniBox API 地址（连接到 omnibox 容器）
+      OMNIBOX_API_URL: "http://omnibox:7023/api/spider/omnibox"
+
       # ── 安全配置 ────────────────────────────────
       # ⚠️ 生产环境必须设置！管理界面 API 密钥
       ADMIN_API_KEY: "${ADMIN_API_KEY}"
@@ -70,6 +73,9 @@ services:
     # ── 网络配置 ────────────────────────────────────
     networks:
       - omnibox_net
+      # 连接 OmniBox 容器的网络，以便调用 spider API
+      omnibox-network:
+        external: true
 
     # ── 资源限制（可选）────────────────────────────
     deploy:
