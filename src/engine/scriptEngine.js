@@ -12,6 +12,8 @@
 const vm = require('vm');
 const axios = require('axios');
 const crypto = require('crypto');
+const https = require('https');
+const http = require('http');
 const { logger } = require('../logger');
 const createOmniBoxSDK = require('./omniboxSdkMock');
 
@@ -23,6 +25,8 @@ function buildFakeRequire(scriptName) {
   return function fakeRequire(mod) {
     if (mod === 'axios') return axios;
     if (mod === 'crypto') return crypto;
+    if (mod === 'https') return https;
+    if (mod === 'http') return http;
     if (mod === 'node-fetch') return require('node-fetch');
     if (mod === 'omnibox_sdk') {
       // 返回一个新的 SDK 实例（每个脚本独立）
