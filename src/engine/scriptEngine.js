@@ -120,6 +120,49 @@ class ScriptEngine {
       clearInterval,
       Buffer,
       global: {},
+      // ─── 添加浏览器 API polyfill ───────────────────────────────
+      URLSearchParams: class URLSearchParams {
+        constructor(init = '') {
+          this._params = new Map();
+          if (typeof init === 'string') {
+            const searchParams = new URLSearchParams(init);
+            searchParams.forEach((value, key) => this._params.set(key, value));
+          } else if (init && typeof init === 'object') {
+            Object.entries(init).forEach(([key, value]) => this._params.set(key, value));
+          }
+        }
+        append(name, value) { this._params.append(name, value); }
+        delete(name) { this._params.delete(name); }
+        get(name) { return this._params.get(name); }
+        getAll(name) { return this._params.getAll(name); }
+        has(name) { return this._params.has(name); }
+        set(name, value) { this._params.set(name, value); }
+        forEach(fn) { this._params.forEach(fn); }
+        toString() {
+          const entries = [];
+          this._params.forEach((value, key) => entries.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`));
+          return entries.join('&');
+        }
+      },
+      // URL polyfill（简化版）
+      URL: class URL {
+        constructor(url, base) {
+          if (base) url = new URL(base) + url;
+          const parsed = new URL(url);
+          this.href = parsed.href;
+          this.origin = parsed.origin;
+          this.protocol = parsed.protocol;
+          this.host = parsed.host;
+          this.hostname = parsed.hostname;
+          this.port = parsed.port;
+          this.pathname = parsed.pathname;
+          this.search = parsed.search;
+          this.hash = parsed.hash;
+          this.searchParams = new URLSearchParams(parsed.search);
+        }
+      },
+      btoa: (str) => Buffer.from(str).toString('base64'),
+      atob: (b64) => Buffer.from(b64, 'base64').toString('binary'),
     };
 
     try {
