@@ -13,13 +13,24 @@ const vm = require('vm');
 const axios = require('axios');
 const crypto = require('crypto');
 const { logger } = require('../logger');
+const createOmniBoxSDK = require('./omniboxSdkMock');
 
 // 给脚本内部用的 fake require
-function buildFakeRequire() {
+function buildFakeRequire(scriptName) {
+  // 每个脚本实例有自己的 SDK 实例
+  const sdkInstances = new Map();
+
   return function fakeRequire(mod) {
     if (mod === 'axios') return axios;
     if (mod === 'crypto') return crypto;
     if (mod === 'node-fetch') return require('node-fetch');
+    if (mod === 'omnibox_sdk') {
+      // 返回一个新的 SDK 实例（每个脚本独立）
+      if (!sdkInstances.has(scriptName)) {
+        sdkInstances.set(scriptName, createOmniBoxSDK());
+      }
+      return sdkInstances.get(scriptName);
+    }
     throw new Error(`模块 ${mod} 不在白名单内`);
   };
 }
@@ -81,7 +92,7 @@ class ScriptEngine {
   // ─── 内部：执行脚本 ───────────────────────────────────────
   async _runScript(code) {
     const sandbox = {
-      require: buildFakeRequire(),
+      require: buildFakeRequire(this.name),
       module: { exports: {} },
       exports: {},
       console: {
