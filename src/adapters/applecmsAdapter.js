@@ -110,7 +110,8 @@ function omniDetailToApple(item, sourceId) {
     const urls = [];
     for (const source of item.vod_play_sources) {
       froms.push(source.name || '线路1');
-      const epStr = (source.episodes || []).map(ep => `${ep.name}$${ep.url}`).join('#');
+      //瓜子APP使用 playId 而不是 url
+      const epStr = (source.episodes || []).map(ep => `${ep.name}$${ep.url || ep.playId || ''}`).join('#');
       urls.push(epStr);
     }
     playFrom = froms.join('$$$');
